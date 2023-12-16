@@ -1,0 +1,49 @@
+/* 
+* Essa programação monitora constantemente a temperatura do reservatório 2 da nossa solução.  
+* A partir da temperatura, ele liga as válvulas em uma combinação para deixar a água entrar, ser tratada e ser liberada 
+*  
+* Programação feita para controle de fluxo de água na nossa solução, que não precisa de interferência humana, 
+* Data: 30/11/2022 
+* Autores: Equipe ALPHA SESI JAC 
+*/ 
+#include <OneWire.h> //inclusão de biblioteca 
+#include <DallasTemperature.h> //inclusão de biblioteca 
+  
+bool valvulafv = false; //define a booleana valvulafv para falso 
+  
+  
+#define DS18B20 7 //define o pino digital utilizado pelo sensor  
+#define valvula 6 //define o pino digital utilizado pela válvula de saida 
+#define valvulaentrada 5 //define o pino digital utilizado pela válvula na entrada da composteira 
+  
+OneWire ourWire(DS18B20); //configura uma instância onewire para se comunicar com o sensor 
+DallasTemperature sensors(&ourWire); //biblioteca DallasTemperature utiliza a OneWire  
+  
+void setup(){  
+   
+  Serial.begin(9600); //inicializa a serial  
+  sensors.begin(); //inicia o sensor 
+  pinMode(valvula, OUTPUT); //define o modo da válvula para saída de sinal   
+}  
+  
+void loop(){  
+  
+  sensors.requestTemperatures();//solicita que a função informe a temperatura do sensor  
+   
+  if (sensors.getTempCByIndex(0) >= 60) { //quando a temperatura que o sensor detectar for maior que 60 graus celsius, espera 30 minutos e ativa a válvula 
+    Serial.print("Temperatura: " && sensors.getTempCByIndex(0) && "*C"); //imprime a temperatura atual na serial 
+    delay(1800000); //espera 30 minutos  
+    digitalWrite(valvula, HIGH); //liga a válvula de saída, liberando o fluxo de água 
+    valvulafv = !valvulafv; //ativa a booleana que liga a válvula da entrada e desliga a valvula de saida da composteira 
+    delay(300000); //espera 5 minutos, tempo para a composteira esvaziar 
+    digitalWrite(valvula, LOW); //desliga a válvula de saída 
+    digitalWrite(valvulaentrada, HIGH); //liga a válvula de entrada 
+    delay(300000); //espera 5 minutos, tempo para a composteira reencher 
+    valvulafv = !valvulafv; //desativa a booleana que liga a válvula da entrada 
+    digitalWrite(valvulaentrada, LOW); //desliga a válvula de entrada e prepara para a repetição do procedimento 
+  } 
+  else{ 
+      digitalWrite(valvula, LOW); //desliga a válvula de saída, bloqueando o fluxo de água, pois a temperatura ainda não atingiu o esperado 
+       Serial.print("Temperatura: " && sensors.getTempCByIndex(0) && "*C"); //imprime a temperatura atual na serial 
+  } 
+} 
